@@ -1,0 +1,100 @@
+name: inception
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+networks:
+  front:
+    driver: bridge
+
+  back:
+    driver: bridge
+    internal: true 
+
+volumes:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${WORDPRESS_DATA_PATH}
+
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MARIADB_DATA_PATH}
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+      args:
+        - NGINX_PORT
+
+    image: ngninx:inception_1
+    container_name: inception_ngninx
+
+    volumes:
+      - wordpress_data:/var/www/html
+
+    networks:
+      - front
+    ports:
+      - "${NGINX_HOST_PORT}:${NGINX_PORT}"
+
+    environment:
+      - NGINX_HOST_PORT
+      - NGINX_PORT
+      - WORDPRESS_DATA_PATH
+
+    depends_on:
+      wordpress:
+        condition: service_healthy
+
+    restart: unless-stopped
+    logging: *default-logging
+
+  wordpress:
+    build:
+      context: ./wordpress
+      dockerfile: Dockerfile
+
+    image: wordpress:inception_1
+    container_name: inception_wordpress
+
+    volumes:
+      - wordpress_data:/var/www/html
+
+    networks:
+      - front
+      - back
+
+    environment:
+      - WORDPRESS_DATA_PATH
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    restart: unless-stopped
+    logging: *default-logging
+
+  mariadb:
+    build:
+      context: ./mariadb
+      dockerfile: Dockerfile
+
+    image: mariadb:inception_1
+    container_name: inception_mariadb
+
+    networks:
+      - back
+
+    restart: unless-stopped
+    logging: *default-logging
