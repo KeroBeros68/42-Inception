@@ -1,1 +1,42 @@
-FROM debian:12
+# Use Alpine as the base image
+FROM alpine:3.20
+
+# Install PHP-FPM, MySQL/MariaDB extension, and required tools/extensions for WordPress
+RUN apk add --no-cache \
+	php83 \
+	php83-fpm \
+	php83-mysqli \
+	php83-curl \
+	php83-gd \
+	php83-intl \
+	php83-mbstring \
+	php83-xml \
+	php83-zip \
+	php83-opcache \
+	php83-json \
+	php83-session \
+	php83-dom \
+	php83-exif \
+	php83-fileinfo \
+	wget \
+	mariadb-client \
+	ca-certificates
+
+# Install WP-CLI (WordPress Command Line Interface)
+RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+	chmod +x wp-cli.phar && \
+	mv wp-cli.phar /usr/local/bin/wp
+
+# Set the working directory to the web root
+WORKDIR /var/www/html
+
+# Copy the entrypoint script into the container
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ARG WORDPRESS_PORT=9000
+EXPOSE ${WORDPRESS_PORT}
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["php-fpm83", "-F"]

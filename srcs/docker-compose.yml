@@ -29,6 +29,10 @@ volumes:
       o: bind
       device: ${MARIADB_DATA_PATH}
 
+secrets:
+  db_root_password:
+    file: ./secrets/db_root_passwd.txt
+
 services:
   nginx:
     build:
@@ -52,10 +56,12 @@ services:
       - NGINX_HOST_PORT
       - NGINX_PORT
       - WORDPRESS_DATA_PATH
+      - WORDPRESS_PORT
+      - DOMAIN_NAME
 
-    depends_on:
-      wordpress:
-        condition: service_healthy
+    #depends_on:
+    #  wordpress:
+    #    condition: service_healthy
 
     restart: unless-stopped
     logging: *default-logging
@@ -78,23 +84,31 @@ services:
     environment:
       - WORDPRESS_DATA_PATH
 
-    depends_on:
-      mariadb:
-        condition: service_healthy
+    #depends_on:
+    #  mariadb:
+    #    condition: service_healthy
 
     restart: unless-stopped
     logging: *default-logging
 
   mariadb:
     build:
-      context: ./mariadb
+      context: ./mariaDB
       dockerfile: Dockerfile
-
+      args:
+        - MARIADB_PORT
     image: mariadb:inception_1
     container_name: inception_mariadb
 
     networks:
       - back
+
+    environment:
+      - MARIADB_HOST
+      - MARIADB_PORT
+      - MARIADB_DATABASE
+      - MARIADB_USER
+      - MARIADB_DATA_PATH
 
     restart: unless-stopped
     logging: *default-logging

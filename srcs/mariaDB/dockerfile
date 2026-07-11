@@ -1,1 +1,26 @@
-FROM debian:12
+# Use Alpine as the base image
+FROM alpine:3.20
+
+# Install MariaDB
+RUN apk add --no-cache \
+	mariadb mariadb-client
+
+# Create required directories for the database and the socket
+# and ensure the 'mysql' user owns them
+RUN mkdir -p /var/lib/mysql /run/mysqld && \
+	chown -R mysql:mysql /var/lib/mysql /run/mysqld
+
+# Copy the initialization script to the container
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Expose the internal port (default 3306) dynamically injected at build time
+# The actual listening port is dynamically injected at runtime via the docker-compose.yml file
+ARG MARIADB_PORT=3306
+EXPOSE ${MARIADB_PORT}
+
+# Set the entrypoint script to handle setup and environment preparation at container start
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default command executed as PID 1 via the entrypoint's 'exec "$@"'
+CMD ["mariadbd"]
