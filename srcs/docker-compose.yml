@@ -96,7 +96,7 @@ services:
 
     secrets:
       - wp_admin_password
-      - wp_wordpress
+      - wp_password
       - db_password
 
     depends_on:
