@@ -7,10 +7,10 @@ x-logging: &default-logging
     max-file: "3"
 
 networks:
-  front:
+  inception-front:
     driver: bridge
 
-  back:
+  inception-back:
     driver: bridge
     internal: true 
 
@@ -33,6 +33,15 @@ secrets:
   db_root_password:
     file: ./secrets/db_root_passwd.txt
 
+  db_password:
+    file: ./secrets/db_password.txt
+
+  wp_admin_password:
+    file: ./secrets/wp_admin_password.txt
+
+  wp_password:
+    file: ./secrets/wp_password.txt
+
 services:
   nginx:
     build:
@@ -48,7 +57,7 @@ services:
       - wordpress_data:/var/www/html
 
     networks:
-      - front
+      - inception-front
     ports:
       - "${NGINX_HOST_PORT}:${NGINX_PORT}"
 
@@ -78,15 +87,21 @@ services:
       - wordpress_data:/var/www/html
 
     networks:
-      - front
-      - back
+      - inception-front
+      - inception-back
 
     environment:
       - WORDPRESS_DATA_PATH
+      - WORDPRESS_PORT
 
-    #depends_on:
-    #  mariadb:
-    #    condition: service_healthy
+    secrets:
+      - wp_admin_password
+      - wp_wordpress
+      - db_password
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
     restart: unless-stopped
     logging: *default-logging
@@ -101,7 +116,7 @@ services:
     container_name: inception_mariadb
 
     networks:
-      - back
+      - inception-back
 
     environment:
       - MARIADB_HOST
@@ -109,6 +124,15 @@ services:
       - MARIADB_DATABASE
       - MARIADB_USER
       - MARIADB_DATA_PATH
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+      - MARIADB_PASSWORD_FILE=/run/secrets/db_password
+
+    secrets:
+      - db_root_password
+      - db_password
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
 
     restart: unless-stopped
     logging: *default-logging
