@@ -15,7 +15,7 @@ if [ "$1" = "nginx" ]; then
     sed -i "s/__NGINX_PORT__/$NGINX_PORT/g" /etc/nginx/nginx.conf
     sed -i "s/__WORDPRESS_PORT__/$WORDPRESS_PORT/g" /etc/nginx/nginx.conf
 
-	    CERTS_DIR="/etc/nginx/ssl"
+	CERTS_DIR="/etc/nginx/ssl"
 
     if [ ! -f "$CERTS_DIR/$DOMAIN_NAME.crt" ]; then
         echo "Generating self-signed SSL certificate..."
