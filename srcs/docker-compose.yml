@@ -93,7 +93,11 @@ services:
     environment:
       - WORDPRESS_DATA_PATH
       - WORDPRESS_PORT
-
+      - MARIADB_HOST
+      - MARIADB_PORT
+      - MARIADB_DATABASE
+      - MARIADB_USER
+      - MARIADB_PASSWORD_FILE=/run/secrets/db_password
     secrets:
       - wp_admin_password
       - wp_password
