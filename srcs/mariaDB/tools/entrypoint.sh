@@ -39,7 +39,7 @@ EOF
         echo "[OK] MariaDB initialized successfully."
     fi
 
-    set -- "$@" --user=mysql --bind-address=0.0.0.0 --port="$MARIADB_PORT"
+    set -- "$@" --user=mysql --skip-networking=0 --bind-address=0.0.0.0 --port="$MARIADB_PORT"
 fi
 
 exec "$@"
