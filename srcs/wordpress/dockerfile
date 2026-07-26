@@ -3,6 +3,7 @@ FROM alpine:3.20
 RUN apk add --no-cache \
 	php83 \
 	php83-fpm \
+	php83-phar \
 	php83-mysqli \
 	php83-curl \
 	php83-gd \
