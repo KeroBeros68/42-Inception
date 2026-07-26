@@ -1,7 +1,5 @@
-# Use Alpine as the base image
 FROM alpine:3.20
 
-# Install PHP-FPM, MySQL/MariaDB extension, and required tools/extensions for WordPress
 RUN apk add --no-cache \
 	php83 \
 	php83-fpm \
@@ -22,15 +20,17 @@ RUN apk add --no-cache \
 	mariadb-client \
 	ca-certificates
 
-# Install WP-CLI (WordPress Command Line Interface)
 RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
 	chmod +x wp-cli.phar && \
 	mv wp-cli.phar /usr/local/bin/wp
 
-# Set the working directory to the web root
+RUN mkdir -p /run/php && \
+	chown nginx:nginx /run/php
+
+RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 9000|' /etc/php/8.2/fpm/pool.d/www.conf
+
 WORKDIR /var/www/html
 
-# Copy the entrypoint script into the container
 COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
