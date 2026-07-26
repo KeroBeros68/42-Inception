@@ -98,6 +98,9 @@ services:
       - MARIADB_DATABASE
       - MARIADB_USER
       - MARIADB_PASSWORD_FILE=/run/secrets/db_password
+      - DOMAIN_NAME
+      - WP_ADMIN_USER
+      - WP_USER
     secrets:
       - wp_admin_password
       - wp_password

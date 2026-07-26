@@ -26,34 +26,38 @@ if [ "$1" = "php-fpm83" ]; then
 EOF
 
 	if [ ! -f /var/www/html/wp-load.php ]; then
-
-		echo "Wordpress not found... Installation.."
+		echo "[INFO] WordPress core not found, downloading..."
 		wp core download --allow-root
+	fi
 
-		until mysqladmin ping -h"$MARIADB_HOST" -P"$MARIADB_PORT" \
-			-u"$MARIADB_USER" -p"$(cat /run/secrets/db_password)" --silent; do
-			echo "[INFO] Waiting for MariaDB..."
-			sleep 2
-		done
+	until mysqladmin ping -h"$MARIADB_HOST" -P"$MARIADB_PORT" \
+		-u"$MARIADB_USER" -p"$(cat /run/secrets/db_password)" --silent; do
+		echo "[INFO] Waiting for MariaDB..."
+		sleep 2
+	done
 
-		if [ ! -f /var/www/html/wp-config.php ]; then
-			wp config create \
-				--dbname="$MARIADB_DATABASE" \
-				--dbuser="$MARIADB_USER" \
-				--dbpass="$(cat /run/secrets/db_password)" \
-				--dbhost="$MARIADB_HOST:$MARIADB_PORT" \
-				--allow-root
-		fi
+	if [ ! -f /var/www/html/wp-config.php ]; then
+		wp config create \
+			--dbname="$MARIADB_DATABASE" \
+			--dbuser="$MARIADB_USER" \
+			--dbpass="$(cat /run/secrets/db_password)" \
+			--dbhost="$MARIADB_HOST:$MARIADB_PORT" \
+			--allow-root
+	fi
 
-		if ! wp core is-installed --allow-root; then
-			wp core install \
-				--url="https://$DOMAIN_NAME" \
-				--title="Inception" \
-				--admin_user="$(cat /run/secrets/wp_admin_password | cut -d: -f1 2>/dev/null || echo admin)" \
-				--admin_password="$(cat /run/secrets/wp_admin_password)" \
-				--admin_email="admin@$DOMAIN_NAME" \
-				--allow-root
-		fi
+	if ! wp core is-installed --allow-root; then
+		wp core install \
+			--url="https://$DOMAIN_NAME" \
+			--title="Inception" \
+			--admin_user="$WP_ADMIN_USER" \
+			--admin_password="$(cat /run/secrets/wp_admin_password)" \
+			--admin_email="$WP_ADMIN_USER@$DOMAIN_NAME" \
+			--allow-root
+
+		wp user create "$WP_USER" "$WP_USER@$DOMAIN_NAME" \
+			--role=author \
+			--user_pass="$(cat /run/secrets/wp_password)" \
+			--allow-root
 	fi
 fi
 
