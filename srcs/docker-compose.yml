@@ -68,8 +68,8 @@ services:
       - WORDPRESS_PORT
       - DOMAIN_NAME
 
-    #depends_on:
-    #  wordpress:
+    depends_on:
+      - wordpress
     #    condition: service_healthy
 
     restart: unless-stopped
