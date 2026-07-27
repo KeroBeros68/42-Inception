@@ -3,8 +3,8 @@
 set -e
 
 if [ "$1" = "php-fpm83" ]; then
-	if [ -z "$WORDPRESS_PORT" ]; then
-		echo "Error: Missing WORDPRESS_PORT environment variable." >&2
+	if [ -z "$WORDPRESS_PORT" ] | [ -z "$WP_ADMIN_USER" ] | [ -z "$WP_USER" ]; then
+		echo "Error: Missing one or more required environment variables." >&2
 		exit 1
 	fi
 
@@ -30,6 +30,16 @@ EOF
 		wp core download --allow-root
 	fi
 
+	if [ -z "$MARIADB_HOST" ] | [ -z "$MARIADB_PORT" ] | [ -z "$MARIADB_USER" ] | [ -z "$MARIADB_DATABASE" ]; then
+		echo "Error: Missing one or more MARIADB environment variables." >&2
+		exit 1
+	fi
+
+	if [ -z "$DOMAIN_NAME" ] | [ -z "$NGINX_HOST_PORT" ]; then
+		echo "Error: Missing one or more DOMAIN_NAME or NGINX_HOST_PORT environment variables." >&2
+		exit 1
+	fi
+
 	until mysqladmin ping -h"$MARIADB_HOST" -P"$MARIADB_PORT" \
 		-u"$MARIADB_USER" -p"$(cat /run/secrets/db_password)" --silent; do
 		echo "[INFO] Waiting for MariaDB..."
@@ -45,9 +55,15 @@ EOF
 			--allow-root
 	fi
 
+	if [ "$NGINX_HOST_PORT" = "443" ]; then
+		SITE_URL="https://$DOMAIN_NAME"
+	else
+		SITE_URL="https://$DOMAIN_NAME:$NGINX_HOST_PORT"
+	fi
+
 	if ! wp core is-installed --allow-root; then
 		wp core install \
-			--url="https://$DOMAIN_NAME" \
+			--url="$SITE_URL" \
 			--title="Inception" \
 			--admin_user="$WP_ADMIN_USER" \
 			--admin_password="$(cat /run/secrets/wp_admin_password)" \
@@ -58,6 +74,9 @@ EOF
 			--role=author \
 			--user_pass="$(cat /run/secrets/wp_password)" \
 			--allow-root
+	else
+		wp option update siteurl "$SITE_URL" --allow-root
+		wp option update home "$SITE_URL" --allow-root
 	fi
 fi
 

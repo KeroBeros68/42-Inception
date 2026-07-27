@@ -50,8 +50,8 @@ services:
       args:
         - NGINX_PORT
 
-    image: ngninx:inception_1
-    container_name: inception_ngninx
+    image: nginx:inception_1
+    container_name: inception_nginx
 
     volumes:
       - wordpress_data:/var/www/html
@@ -99,6 +99,7 @@ services:
       - MARIADB_USER
       - MARIADB_PASSWORD_FILE=/run/secrets/db_password
       - DOMAIN_NAME
+      - NGINX_HOST_PORT
       - WP_ADMIN_USER
       - WP_USER
     secrets:
@@ -115,10 +116,11 @@ services:
 
   mariadb:
     build:
-      context: ./mariaDB
+      context: ./mariadb
       dockerfile: Dockerfile
       args:
         - MARIADB_PORT
+
     image: mariadb:inception_1
     container_name: inception_mariadb
 
