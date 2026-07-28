@@ -53,7 +53,7 @@ help:
 
 # Run the main program.
 run:
-	docker compose -f $(DOCKER_COMPOSE) up --build
+	docker compose -f $(DOCKER_COMPOSE) up --build -d
 
 down:
 	docker compose -f $(DOCKER_COMPOSE) down
@@ -70,3 +70,8 @@ clean:
 fclean: clean
 	$(ECHO) "$(CYAN)Suppression de tous les conteneurs...$(RESET) "
 		docker system prune -af 2>/dev/null
+
+# Database acces
+db:
+	docker exec -it inception_mariadb /bin/sh
+	mysql -u root -p"$(cat /run/secrets/db_root_password)" wordpress -e "SELECT * FROM wp_comments;"

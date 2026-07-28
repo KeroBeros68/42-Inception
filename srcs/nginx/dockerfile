@@ -12,7 +12,7 @@ ARG NGINX_PORT=443
 EXPOSE ${NGINX_PORT}
 
 HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=5 \
-  CMD wget --no-verbose --tries=1 --spider https://localhost:${NGINX_PORT}/ || exit 1
+  CMD wget --no-verbose --tries=1 --no-check-certificate --spider https://localhost:${NGINX_PORT}/ || exit 1
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

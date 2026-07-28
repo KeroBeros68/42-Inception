@@ -36,6 +36,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 ARG WORDPRESS_PORT=9000
 EXPOSE ${WORDPRESS_PORT}
 
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=5 \
+  CMD nc -z 127.0.0.1 ${WORDPRESS_PORT} || exit 1
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 CMD ["php-fpm83", "-F"]
