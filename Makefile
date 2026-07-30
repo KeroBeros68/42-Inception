@@ -21,13 +21,17 @@ ECHO    := echo -e
 #                                  VARIABLES                                   #
 # **************************************************************************** #
 
+-include srcs/.env
+
 DOCKER_COMPOSE := srcs/docker-compose.yml
 
 # **************************************************************************** #
 #									.PHONY									   #
 # **************************************************************************** #
 
-.PHONY: help run down re clean fclean
+.PHONY: all help run down re clean fclean db
+
+.DEFAULT_GOAL := all
 
 # **************************************************************************** #
 #									Help								  	   #
@@ -40,8 +44,9 @@ help:
 	$(ECHO) "$(CYAN)run$(RESET) - Run the main program."
 	$(ECHO) "$(CYAN)down$(RESET) - Stop the running containers."
 	$(ECHO) "$(CYAN)re$(RESET) - Restart the main program."
-	$(ECHO) "$(CYAN)clean$(RESET) - Clean up the containers."
-	$(ECHO) "$(CYAN)fclean$(RESET) - Force clean up the containers."
+	$(ECHO) "$(CYAN)clean$(RESET) - Stop containers and remove this project's images/volumes."
+	$(ECHO) "$(CYAN)fclean$(RESET) - Same as clean, plus a full Docker system prune."
+	$(ECHO) "$(CYAN)db$(RESET) - Open a MySQL shell on the wordpress database."
 	$(ECHO) "$(CYAN)help$(RESET) - Show this help message."
 
 
@@ -51,8 +56,18 @@ help:
 
 # ###		APP RULES 		### #
 
+all: run
+
 # Run the main program.
 run:
+	mkdir -p $(REDIS_DATA_PATH)
+	mkdir -p $(MARIADB_DATA_PATH)
+	mkdir -p $(WORDPRESS_DATA_PATH)
+	touch secrets/db_root_password.txt
+	touch secrets/db_password.txt
+	touch secrets/wp_admin_password.txt
+	touch secrets/wp_password.txt
+	touch secrets/redis_password.txt
 	docker compose -f $(DOCKER_COMPOSE) up --build -d
 
 down:
@@ -63,15 +78,14 @@ re: down run
 # ###		CLEAN RULES 		### #
 
 clean:
-	$(ECHO) "$(CYAN)Suppression des conteneurs...$(RESET)"
-	docker system prune -f 2>/dev/null
+	$(ECHO) "$(CYAN)Suppression des conteneurs, images et volumes du projet...$(RESET)"
+	docker compose -f $(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans
 
-# Remove logs after cleaning.
+# Also prune the whole Docker system (affects images/containers outside this project too).
 fclean: clean
-	$(ECHO) "$(CYAN)Suppression de tous les conteneurs...$(RESET) "
-		docker system prune -af 2>/dev/null
+	$(ECHO) "$(CYAN)Nettoyage complet de Docker...$(RESET)"
+	docker system prune -af 2>/dev/null
 
-# Database acces
+# Database access
 db:
-	docker exec -it inception_mariadb /bin/sh
-	mysql -u root -p"$(cat /run/secrets/db_root_password)" wordpress -e "SELECT * FROM wp_comments;"
+	docker exec -it inception_mariadb mysql -u root -p"$$(cat /run/secrets/db_root_password)" wordpress -e "SELECT * FROM wp_comments;"

@@ -29,6 +29,13 @@ volumes:
       o: bind
       device: ${MARIADB_DATA_PATH}
 
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${REDIS_DATA_PATH}
+
 secrets:
   db_root_password:
     file: ../secrets/db_root_password.txt
@@ -41,6 +48,9 @@ secrets:
 
   wp_password:
     file: ../secrets/wp_password.txt
+
+  redis_password:
+    file: ../secrets/redis_password.txt
 
 services:
   nginx:
@@ -102,13 +112,21 @@ services:
       - NGINX_HOST_PORT
       - WP_ADMIN_USER
       - WP_USER
+      - WP_ADMIN_PASSWORD_FILE=/run/secrets/wp_admin_password
+      - WP_PASSWORD_FILE=/run/secrets/wp_password
+      - REDIS_HOST
+      - REDIS_PORT
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     secrets:
       - wp_admin_password
       - wp_password
       - db_password
+      - redis_password
 
     depends_on:
       mariadb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
     restart: unless-stopped
@@ -142,6 +160,33 @@ services:
 
     volumes:
       - mariadb_data:/var/lib/mysql
+
+    restart: unless-stopped
+    logging: *default-logging
+
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+      args:
+        - REDIS_PORT
+
+    image: redis:inception_1
+    container_name: inception_redis
+
+    networks:
+      - inception-back
+
+    environment:
+      - REDIS_HOST
+      - REDIS_PORT
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+
+    secrets:
+      - redis_password
+
+    volumes:
+      - redis_data:/data
 
     restart: unless-stopped
     logging: *default-logging

@@ -2,3 +2,17 @@ FROM alpine:3.20
 
 RUN apk add --no-cache redis
 
+COPY conf/redis.conf /usr/local/etc/redis/redis.conf
+
+COPY tools/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ARG REDIS_PORT=6379
+EXPOSE ${REDIS_PORT}
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=5 \
+  CMD redis-cli -h localhost -p ${REDIS_PORT} ping || exit 1
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]

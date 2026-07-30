@@ -3,10 +3,10 @@
 set -e
 
 if [ "$1" = "php-fpm83" ]; then
-	if [ -z "$WORDPRESS_PORT" ] | [ -z "$WP_ADMIN_USER" ] | [ -z "$WP_USER" ]; then
-		echo "Error: Missing one or more required environment variables." >&2
-		exit 1
-	fi
+    if [ -z "$WORDPRESS_PORT" ] || [ -z "$WP_ADMIN_USER" ] || [ -z "$WP_USER" ]; then
+        echo "[ERROR] Missing one or more required environment variables." >&2
+        exit 1
+    fi
 
 	echo "[INFO] Writing PHP-FPM pool config (listening on port $WORDPRESS_PORT)..."
 
@@ -30,13 +30,13 @@ EOF
 		wp core download --allow-root
 	fi
 
-	if [ -z "$MARIADB_HOST" ] | [ -z "$MARIADB_PORT" ] | [ -z "$MARIADB_USER" ] | [ -z "$MARIADB_DATABASE" ]; then
-		echo "Error: Missing one or more MARIADB environment variables." >&2
+	if [ -z "$MARIADB_HOST" ] || [ -z "$MARIADB_PORT" ] || [ -z "$MARIADB_USER" ] || [ -z "$MARIADB_DATABASE" ]; then
+		echo "[ERROR] Missing one or more MARIADB environment variables." >&2
 		exit 1
 	fi
 
-	if [ -z "$DOMAIN_NAME" ] | [ -z "$NGINX_HOST_PORT" ]; then
-		echo "Error: Missing one or more DOMAIN_NAME or NGINX_HOST_PORT environment variables." >&2
+	if [ -z "$DOMAIN_NAME" ] || [ -z "$NGINX_HOST_PORT" ]; then
+		echo "[ERROR] Missing one or more DOMAIN_NAME or NGINX_HOST_PORT environment variables." >&2
 		exit 1
 	fi
 
@@ -78,6 +78,27 @@ EOF
 		wp option update siteurl "$SITE_URL" --allow-root
 		wp option update home "$SITE_URL" --allow-root
 	fi
+
+	if [ ! -f /var/www/html/wp-content/plugins/redis-cache/object-cache.php ]; then
+		wp plugin install redis-cache --activate --allow-root
+	fi
+
+	if [ -z "$REDIS_PORT" ] || [ -z "$REDIS_HOST" ]; then
+		echo "[ERROR] Missing one or more REDIS environment variables." >&2
+		exit 1
+	fi
+
+    if ! wp redis status --allow-root 2>&1 | grep -qi "connected"; then
+        echo "[INFO] Configuring Redis..."
+        wp config set WP_REDIS_HOST "$REDIS_HOST" --allow-root
+        wp config set WP_REDIS_PORT "$REDIS_PORT" --allow-root
+        wp config set WP_REDIS_PASSWORD "$(cat /run/secrets/redis_password)" --allow-root
+        wp redis enable --allow-root
+    else
+        echo "[INFO] Redis is already connected."
+    fi
+
+	chown -R nobody:nobody /var/www/html
 fi
 
 exec "$@"
