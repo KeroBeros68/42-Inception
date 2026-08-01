@@ -40,7 +40,7 @@ EOF
 		exit 1
 	fi
 
-	until mysqladmin ping -h"$MARIADB_HOST" -P"$MARIADB_PORT" \
+	until mariadb-admin ping -h"$MARIADB_HOST" -P"$MARIADB_PORT" \
 		-u"$MARIADB_USER" -p"$(cat /run/secrets/db_password)" --silent; do
 		echo "[INFO] Waiting for MariaDB..."
 		sleep 2

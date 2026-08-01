@@ -89,4 +89,4 @@ fclean: clean
 
 # Database access
 db:
-	docker exec -it inception_mariadb mysql -u root -p"$$(cat /run/secrets/db_root_password)" wordpress -e "SELECT * FROM wp_comments;"
+	docker exec -it inception_mariadb mariadb -u root -p"$$(cat /run/secrets/db_root_password)" wordpress -e "SELECT * FROM wp_comments;"
