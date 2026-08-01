@@ -38,9 +38,10 @@ if [ "$1" = "/usr/sbin/pure-ftpd" ]; then
         -p "$FTP_PASSIVE_MIN_PORT:$FTP_PASSIVE_MAX_PORT" \
         -A -E -R -C 10
 
-    if [ -n "$DOMAIN_NAME" ]; then
-        set -- "$@" -P "$DOMAIN_NAME"
-    fi
+	if [ -n "$DOMAIN_NAME" ]; then
+		FTP_IP=$(hostname -i)
+		set -- "$@" -P "$FTP_IP"
+	fi
 fi
 
 exec "$@"
