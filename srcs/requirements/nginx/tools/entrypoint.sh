@@ -4,8 +4,8 @@ set -e
 
 if [ "$1" = "nginx" ]; then
 
-    if [ -z "$DOMAIN_NAME" ] || [ -z "$NGINX_PORT" ] || [ -z "$WORDPRESS_PORT" ]; then
-        echo "[ERROR]: Missing DOMAIN_NAME, NGINX_PORT and/or WP_PORT environment variable(s)." >&2
+    if [ -z "$DOMAIN_NAME" ] || [ -z "$NGINX_PORT" ] || [ -z "$WORDPRESS_PORT" ] || [ -z "$ADMINER_PORT" ]; then
+        echo "[ERROR]: Missing DOMAIN_NAME, NGINX_PORT, WORDPRESS_PORT and/or ADMINER_PORT environment variable(s)." >&2
         exit 1
     fi
 
@@ -14,6 +14,7 @@ if [ "$1" = "nginx" ]; then
     sed -i "s/__DOMAIN_NAME__/$DOMAIN_NAME/g" /etc/nginx/nginx.conf
     sed -i "s/__NGINX_PORT__/$NGINX_PORT/g" /etc/nginx/nginx.conf
     sed -i "s/__WORDPRESS_PORT__/$WORDPRESS_PORT/g" /etc/nginx/nginx.conf
+    sed -i "s/__ADMINER_PORT__/$ADMINER_PORT/g" /etc/nginx/nginx.conf
 
 	CERTS_DIR="/etc/nginx/ssl"
 

@@ -58,8 +58,8 @@ secrets:
 services:
   nginx:
     build:
-      context: ./nginx
-      dockerfile: Dockerfile
+      context: ./requirements/nginx
+      dockerfile: dockerfile
       args:
         - NGINX_PORT
 
@@ -79,10 +79,13 @@ services:
       - NGINX_PORT
       - WORDPRESS_DATA_PATH
       - WORDPRESS_PORT
+      - ADMINER_PORT
       - DOMAIN_NAME
 
     depends_on:
       wordpress:
+        condition: service_healthy
+      adminer:
         condition: service_healthy
 
     restart: unless-stopped
@@ -90,8 +93,8 @@ services:
 
   wordpress:
     build:
-      context: ./wordpress
-      dockerfile: Dockerfile
+      context: ./requirements/wordpress
+      dockerfile: dockerfile
 
     image: wordpress:inception_1
     container_name: inception_wordpress
@@ -137,8 +140,8 @@ services:
 
   mariadb:
     build:
-      context: ./mariadb
-      dockerfile: Dockerfile
+      context: ./requirements/mariadb
+      dockerfile: dockerfile
       args:
         - MARIADB_PORT
 
@@ -169,8 +172,8 @@ services:
 
   redis:
     build:
-      context: ./redis
-      dockerfile: Dockerfile
+      context: ./requirements/bonus/redis
+      dockerfile: dockerfile
       args:
         - REDIS_PORT
 
@@ -194,9 +197,33 @@ services:
     restart: unless-stopped
     logging: *default-logging
 
+  adminer:
+    build:
+      context: ./requirements/bonus/adminer
+      dockerfile: dockerfile
+      args:
+        - ADMINER_PORT
+
+    image: adminer:inception_1
+    container_name: inception_adminer
+
+    networks:
+      - inception-front
+      - inception-back
+
+    environment:
+      - ADMINER_PORT
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    restart: unless-stopped
+    logging: *default-logging
+
   pure-ftpd:
     build:
-      context: ./pure-ftpd
+      context: ./requirements/bonus/pure-ftpd
       dockerfile: dockerfile
       args:
         - FTP_PORT

@@ -1,0 +1,7 @@
+# Real secret values — never commit credentials. The Makefile's `run`
+# target touches these files locally; they're populated by hand, not git.
+secrets/*.txt
+!secrets/.gitkeep
+
+# Local environment config — copy srcs/.env.example to srcs/.env and fill it in.
+srcs/.env

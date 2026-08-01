@@ -1,0 +1,29 @@
+FROM alpine:3.23
+
+RUN apk add --no-cache \
+	php83 \
+	php83-fpm \
+	php83-mysqli \
+	php83-session \
+	php83-json \
+	php83-opcache \
+	wget
+
+WORKDIR /var/www/adminer
+
+ARG ADMINER_VERSION=5.5.1
+RUN wget -O index.php \
+	"https://github.com/vrana/adminer/releases/download/v${ADMINER_VERSION}/adminer-${ADMINER_VERSION}-mysql.php"
+
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ARG ADMINER_PORT=8080
+EXPOSE ${ADMINER_PORT}
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=5 \
+  CMD nc -z 127.0.0.1 ${ADMINER_PORT} || exit 1
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["php-fpm83", "-F"]
