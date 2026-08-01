@@ -68,6 +68,7 @@ run:
 	touch secrets/wp_admin_password.txt
 	touch secrets/wp_password.txt
 	touch secrets/redis_password.txt
+	touch secrets/ftp_password.txt
 	docker compose -f $(DOCKER_COMPOSE) up --build -d
 
 down:

@@ -1,0 +1,17 @@
+FROM alpine:3.20
+
+RUN apk add --no-cache pure-ftpd
+
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ARG FTP_PORT=21
+EXPOSE ${FTP_PORT}
+EXPOSE 30000-30009
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=5 \
+  CMD nc -z 127.0.0.1 ${FTP_PORT} || exit 1
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["/usr/sbin/pure-ftpd"]

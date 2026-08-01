@@ -52,6 +52,9 @@ secrets:
   redis_password:
     file: ../secrets/redis_password.txt
 
+  ftp_password:
+    file: ../secrets/ftp_password.txt
+
 services:
   nginx:
     build:
@@ -187,6 +190,43 @@ services:
 
     volumes:
       - redis_data:/data
+
+    restart: unless-stopped
+    logging: *default-logging
+
+  pure-ftpd:
+    build:
+      context: ./pure-ftpd
+      dockerfile: dockerfile
+      args:
+        - FTP_PORT
+
+    image: pure-ftpd:inception_1
+    container_name: inception_pureftpd
+
+    volumes:
+      - wordpress_data:/var/www/html
+
+    networks:
+      - inception-front
+
+    ports:
+      - "${FTP_PORT}:${FTP_PORT}"
+      - "${FTP_PASSIVE_MIN_PORT}-${FTP_PASSIVE_MAX_PORT}:${FTP_PASSIVE_MIN_PORT}-${FTP_PASSIVE_MAX_PORT}"
+
+    environment:
+      - FTP_PORT
+      - FTP_USER
+      - FTP_PASSIVE_MIN_PORT
+      - FTP_PASSIVE_MAX_PORT
+      - DOMAIN_NAME
+
+    secrets:
+      - ftp_password
+
+    depends_on:
+      wordpress:
+        condition: service_healthy
 
     restart: unless-stopped
     logging: *default-logging
