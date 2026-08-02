@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inception</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">42 &middot; System Administration</p>
+      <h1>Inception</h1>
+      <p class="lede">A small, hand-built infrastructure: every service runs in its own container, from its own Dockerfile, wired together by Docker Compose.</p>
+    </header>
+
+    <section class="stack">
+      <h2>The stack</h2>
+      <ul class="services">
+        <li><span class="tag mandatory">core</span><strong>NGINX</strong> — single entrypoint, TLS 1.2/1.3 only</li>
+        <li><span class="tag mandatory">core</span><strong>WordPress</strong> + php-fpm</li>
+        <li><span class="tag mandatory">core</span><strong>MariaDB</strong></li>
+        <li><span class="tag bonus">bonus</span><strong>Redis</strong> — object cache</li>
+        <li><span class="tag bonus">bonus</span><strong>Pure-FTPd</strong> — access to the WordPress volume</li>
+        <li><span class="tag bonus">bonus</span><strong>Adminer</strong> — database administration</li>
+        <li><span class="tag bonus">bonus</span><strong>this site</strong> — static, no PHP</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Built with Alpine Linux base images, Docker named volumes, and Docker secrets — no ready-made images beyond the base OS.</p>
+    </footer>
+  </main>
+</body>
+</html>

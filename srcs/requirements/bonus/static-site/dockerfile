@@ -1,0 +1,16 @@
+FROM alpine:3.23
+
+COPY html /var/www/html
+
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ARG STATIC_SITE_PORT=8081
+EXPOSE ${STATIC_SITE_PORT}
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=5 \
+  CMD nc -z 127.0.0.1 ${STATIC_SITE_PORT} || exit 1
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["httpd"]

@@ -81,11 +81,19 @@ services:
       - WORDPRESS_PORT
       - ADMINER_PORT
       - DOMAIN_NAME
+      - STATIC_DOMAIN_NAME
+      - STATIC_SITE_PORT
+      - NETDATA_DOMAIN_NAME
+      - NETDATA_PORT
 
     depends_on:
       wordpress:
         condition: service_healthy
       adminer:
+        condition: service_healthy
+      static-site:
+        condition: service_healthy
+      netdata:
         condition: service_healthy
 
     restart: unless-stopped
@@ -217,6 +225,52 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+
+    restart: unless-stopped
+    logging: *default-logging
+
+  static-site:
+    build:
+      context: ./requirements/bonus/static-site
+      dockerfile: dockerfile
+      args:
+        - STATIC_SITE_PORT
+
+    image: static-site:inception_1
+    container_name: inception_static_site
+
+    networks:
+      - inception-front
+
+    environment:
+      - STATIC_SITE_PORT
+
+    restart: unless-stopped
+    logging: *default-logging
+
+  netdata:
+    build:
+      context: ./requirements/bonus/netdata
+      dockerfile: dockerfile
+      args:
+        - NETDATA_PORT
+
+    image: netdata:inception_1
+    container_name: inception_netdata
+
+    networks:
+      - inception-front
+
+    # Read-only access to the host's process/kernel metrics and the Docker
+    # socket, so Netdata can report per-container CPU/RAM/network usage
+    # instead of just its own (near-empty) container.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+
+    environment:
+      - NETDATA_PORT
 
     restart: unless-stopped
     logging: *default-logging

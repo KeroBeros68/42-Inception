@@ -1,0 +1,18 @@
+FROM alpine:3.23
+
+RUN apk add --no-cache netdata
+
+COPY conf/netdata.conf /etc/netdata/netdata.conf
+
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ARG NETDATA_PORT=19999
+EXPOSE ${NETDATA_PORT}
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=15s --retries=5 \
+  CMD nc -z 127.0.0.1 ${NETDATA_PORT} || exit 1
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["netdata", "-D"]
