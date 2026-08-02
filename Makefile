@@ -29,7 +29,14 @@ DOCKER_COMPOSE := srcs/docker-compose.yml
 #									.PHONY									   #
 # **************************************************************************** #
 
-.PHONY: all help run down re clean fclean db
+.PHONY: all help run down re clean fclean db secrets
+
+SECRET_FILES := secrets/db_root_password.txt \
+                 secrets/db_password.txt \
+                 secrets/wp_admin_password.txt \
+                 secrets/wp_password.txt \
+                 secrets/redis_password.txt \
+                 secrets/ftp_password.txt
 
 .DEFAULT_GOAL := all
 
@@ -47,6 +54,7 @@ help:
 	$(ECHO) "$(CYAN)clean$(RESET) - Stop containers and remove this project's images/volumes."
 	$(ECHO) "$(CYAN)fclean$(RESET) - Same as clean, plus a full Docker system prune."
 	$(ECHO) "$(CYAN)db$(RESET) - Open a MySQL shell on the wordpress database."
+	$(ECHO) "$(CYAN)secrets$(RESET) - Interactively create the secrets/*.txt credential files."
 	$(ECHO) "$(CYAN)help$(RESET) - Show this help message."
 
 
@@ -59,16 +67,10 @@ help:
 all: run
 
 # Run the main program.
-run:
+run: secrets
 	mkdir -p $(REDIS_DATA_PATH)
 	mkdir -p $(MARIADB_DATA_PATH)
 	mkdir -p $(WORDPRESS_DATA_PATH)
-	touch secrets/db_root_password.txt
-	touch secrets/db_password.txt
-	touch secrets/wp_admin_password.txt
-	touch secrets/wp_password.txt
-	touch secrets/redis_password.txt
-	touch secrets/ftp_password.txt
 	docker compose -f $(DOCKER_COMPOSE) up --build -d
 
 down:
@@ -90,3 +92,23 @@ fclean: clean
 # Database access
 db:
 	docker exec -it inception_mariadb mariadb -u root -p"$$(cat /run/secrets/db_root_password)" wordpress -e "SELECT * FROM wp_comments;"
+
+# ###		SECRETS RULE 		### #
+
+# Interactively create the secrets/*.txt credential files (does not touch make run/all).
+secrets:
+	mkdir -p secrets
+	for f in $(SECRET_FILES); do \
+		if [ -s "$$f" ]; then \
+			$(ECHO) "$(YELLOW)$$f already exists, skipping.$(RESET)"; \
+			continue; \
+		fi; \
+		read -r -s -p "Enter value for $$f: " value; \
+		echo; \
+		if [ -z "$$value" ]; then \
+			$(ECHO) "$(RED)Empty value, skipping $$f.$(RESET)"; \
+			continue; \
+		fi; \
+		printf '%s' "$$value" > "$$f"; \
+		$(ECHO) "$(GREEN)$$f written.$(RESET)"; \
+	done
